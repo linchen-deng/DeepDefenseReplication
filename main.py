@@ -8,7 +8,7 @@ from itertools import cycle
 
 from models import MLP, MLP_tuning, regu_MLP
 from adversarial import deepfool, FGS
-from helper import preprocess, train, regu_train, test, rho2, plot_acc_on_FGS
+from helper import preprocess, train, regu_train, test, rho2, plot_acc_on_FGS, roc
 
 
 def main():
@@ -69,6 +69,16 @@ def main():
 
 
     ################### Evaluation #########################
+    # ROC curve on deepfool testing image generated from origianl MLP model
+    roc1 = roc(orig_model, test_adv_orig, y_test, "Vanilla MLP")
+    roc2 = roc(tuning_model, test_adv_orig, y_test, "Fine tuning MLP")
+    roc3 = roc(regu_model, test_adv_orig, y_test, "Deep Defense MLP")
+    AUC = pd.DataFrame({"Vanilla MLP": list(roc1.values()),
+                        "Fine-Tune MLP": list(roc2.values()),
+                        "Deep Defense": list(roc3.values())}, index=["label " + str(i + 1) for i in range(10)])
+    print("Area Under the Curve:")
+    print(AUC)
+
     # testing acc on benign images
     benign_test_acc=pd.DataFrame({
         "Vanilla MLP":test(orig_model, test_inputs, y_test),
@@ -110,6 +120,8 @@ def main():
                            "Deep Defense": FGS_regu_test_acc}, index=["eps_ref@0.2", "eps_ref@0.5", "eps_ref@1.0"])
     result_table = pd.concat([benign_test_acc, rho2_all, acc_fgs], ignore_index = False).transpose()
     print(result_table)
+
+
 
 if __name__ == "__main__":
     main()

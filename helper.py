@@ -73,31 +73,29 @@ def test(model, test_inputs, test_labels):
 def rho2(test_all_r_out, test_inputs):
     return tf.reduce_mean(tf.norm(test_all_r_out, axis = 1 ) /tf.norm(test_inputs, axis = 1)).numpy()
 
-def roc(model, inputs, labels):
 
-
+def roc(model, inputs, labels, model_name):
     n_classes = labels.shape[1]
 
     logits = model.call(inputs)
+
     probs = np.array(tf.nn.softmax(logits))
-    # fpr, tpr, thresh = roc_curve(labels, probs)
-    # auc = roc_auc_score(labels, probs)
 
     # Compute ROC curve and ROC area for each class
+
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
+
     for i in range(n_classes):
         fpr[i], tpr[i], _ = roc_curve(labels[:, i], probs[:, i])
         roc_auc[i] = auc(fpr[i], tpr[i])
 
-
     # Plot all ROC curves
+
     plt.figure()
-
-
-    colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
-    for i, color in zip(range(7 ,10), colors):
+    colors = cycle(['blue', 'darkorange'])
+    for i, color in zip([2,3], colors):
         plt.plot(fpr[i], tpr[i], color=color, lw=2,
                  label='ROC curve of class {0} (area = {1:0.2f})'
                        ''.format(i, roc_auc[i]))
@@ -107,11 +105,12 @@ def roc(model, inputs, labels):
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Some extension of Receiver operating characteristic to multi-class')
+    plt.title('ROC curve for class 2 and class 3 of '+ model_name)
     plt.legend(loc="lower right")
     plt.show()
 
-    return auc
+    return roc_auc
+
 
 def plot_acc_on_FGS(model, regu_model, finetune_model, test_inputs, y_test, delta_x):
     acc_model, acc_regu, acc_adv, acc_finetune = [], [], [], []
